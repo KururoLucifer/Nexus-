@@ -5,7 +5,7 @@
   <title>Chat vocal & texte</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC&display=swap" rel="stylesheet" />
   <style>
-    /* Fond d'écran dégradé / image */
+    /* Styles inchangés */
     body {
       margin: 0;
       font-family: 'Noto Serif SC', serif;
@@ -16,8 +16,6 @@
       overflow: hidden;
       position: relative;
     }
-
-    /* Sidebar salons */
     #sidebar {
       width: 220px;
       background: rgba(47, 49, 54, 0.85);
@@ -55,8 +53,6 @@
       color: white;
       font-weight: bold;
     }
-
-    /* Chat + vocal container */
     #main {
       flex: 1;
       display: flex;
@@ -66,8 +62,6 @@
       position: relative;
       z-index: 5;
     }
-
-    /* Profil en haut à droite */
     #profile {
       position: fixed;
       top: 15px;
@@ -107,8 +101,6 @@
       background: #40444b;
       color: white;
     }
-
-    /* Chat messages */
     #chat-box {
       flex: 1;
       padding: 20px;
@@ -138,8 +130,6 @@
       color: #b9bbbe;
       float: right;
     }
-
-    /* Input area */
     #form {
       display: flex;
       border-top: 1px solid #202225;
@@ -169,8 +159,6 @@
     #send-btn:hover {
       background: #5b6eae;
     }
-
-    /* Voice chat */
     #voice-chat {
       border-top: 1px solid #202225;
       background: transparent;
@@ -236,7 +224,6 @@
   </div>
 
   <script>
-    // Pseudo
     const pseudo = sessionStorage.getItem('pseudo');
     if (!pseudo) {
       alert('Pas de pseudo détecté. Retour à la connexion.');
@@ -244,7 +231,6 @@
     }
     document.getElementById('profile-name').textContent = pseudo;
 
-    // Gestion bio simple en localStorage
     const bioInput = document.getElementById('profile-bio');
     const bioKey = 'bio_' + pseudo;
     bioInput.value = localStorage.getItem(bioKey) || '';
@@ -252,21 +238,21 @@
       localStorage.setItem(bioKey, bioInput.value);
     });
 
-    // Gestion des salons
     const channels = document.querySelectorAll('#channels button');
     let activeChannel = 'general';
 
-    channels.forEach(btn => {
-      btn.addEventListener('click', () => {
-        channels.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeChannel = btn.dataset.channel;
-        loadMessages(activeChannel);
-      });
-    });
-
     // Stockage local des messages par salon
     const messagesDB = {};
+
+    function displayMessage(msg, self = false) {
+      const chatBox = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.classList.add('message');
+      if (self) div.classList.add('self');
+      div.innerHTML = `<span class="username">${msg.username}</span><span class="time">${msg.time}</span><div class="text">${msg.text}</div>`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
     function loadMessages(channel) {
       const chatBox = document.getElementById('chat-box');
@@ -277,4 +263,41 @@
       });
     }
 
-    function
+    channels.forEach(btn => {
+      btn.addEventListener('click', () => {
+        channels.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeChannel = btn.dataset.channel;
+        loadMessages(activeChannel);
+      });
+    });
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('message-input');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+      const message = {
+        username: pseudo,
+        text: text,
+        time: time,
+      };
+
+      if (!messagesDB[activeChannel]) messagesDB[activeChannel] = [];
+      messagesDB[activeChannel].push(message);
+
+      displayMessage(message, true);
+      input.value = '';
+    });
+
+    // Charger les messages du salon général au démarrage
+    loadMessages(activeChannel);
+  </script>
+</body>
+</html>
